@@ -7,11 +7,11 @@ contract chain {
     constructor(){
         Owner=msg.sender;
     }
-    struct RegOrganizer{
+    struct Organizer{
         string Name;
         uint Age;
         string Phonenumber;
-        string adherenumber;
+        //string adherenumber;
         string work;
         string Address;
         string Email_Id;
@@ -36,7 +36,33 @@ contract chain {
         string Email_id;
     }
     
-    mapping(address=>RegOrganizer) public RegOrganizer_Info;
-    address[] public RegOrganizer_Log;
+    
+
+    mapping(address=>Organizer) public Organizer_Info;
+    address [] public Organizer_Log;
+
+    function RegOrganizer(string memory _Name,uint _Age,string memory _Phone_number,string memory _work,string memory _Address,string memory _Email) public {
+            Organizer memory xorganizer=Organizer({
+                Name:_Name,
+                Age:_Age,
+                Phonenumber:_Phone_number,
+                work:_work,
+                Address:_Address,
+                Email_Id:_Email,
+                Organizer:msg.sender
+            });
+            Organizer_Info[msg.sender]=xorganizer;
+            Organizer_Log.push(msg.sender);
+    }
+
+    function RegEvent(string memory _Patient_name,string memory _Dieases_name,){
+        // string Patient_name;
+        // string Dieases_name;
+        // string Hospital_name;
+        // string Docter_name;
+        // string Contact_Docter;
+        // uint Total_amount;
+        // uint Remaining_amount
+    }
     
 }

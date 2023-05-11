@@ -3,17 +3,11 @@ pragma solidity ^0.8.13;
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./PriceConverter.sol";
 contract chain {
-    address Owner;
-    constructor(){
-        Owner=msg.sender;
-    }
+    using PriceConverter for uint;
+    uint public Total_Organizer;
+    uint public Total_Events;
     struct Organizer{
         string Name;
-        uint Age;
-        string Phonenumber;
-        //string adherenumber;
-        string work;
-        string Address;
         string Email_Id;
         bool active;
         address Organizer;
@@ -21,80 +15,100 @@ contract chain {
 
     struct Event{
         string Patient_name;
-        string Dieases_name;
+        uint age;
+        string Relation;
+        string Prb;
+        uint deadline;
         string Hospital_name;
-        string Docter_name;
-        string Contact_Docter;
+        string Doctor;
         uint Total_amount;
         uint Remaining_amount;
+        bool active;
     }
 
     struct End_user{
         string Name;
         uint Amount;
         address user_address;
-        string Phone_number;
         string Email_id;
     }
     
     
 
     mapping(address=>Organizer) public Organizer_Info;
-    address [] public Organizer_Log;
+    address [] private Organizer_Log;
 
     mapping (address=>Event) public Event_Info;
+    address [] private Event_Info_Log;
 
     mapping(address=>End_user) public End_user_Info;
-
-    function RegOrganizer(string memory _Name,uint _Age,string memory _Phone_number,string memory _work,string memory _Address,string memory _Email) public {
+    address [] private End_user_Log;
+    function RegOrganizer(string memory _Name,string memory _Email) public {
             Organizer memory xorganizer=Organizer({
                 Name:_Name,
-                Age:_Age,
-                Phonenumber:_Phone_number,
-                work:_work,
-                Address:_Address,
                 Email_Id:_Email,
                 active:true,
                 Organizer:msg.sender
             });
             Organizer_Info[msg.sender]=xorganizer;
             Organizer_Log.push(msg.sender);
+            Total_Organizer++;
     }
 
-    function RegEvent(string memory _Patient_name,string memory _Dieases_name,string memory _Hospital_name,string memory _Docter_name,string memory _Contact_Docter,uint _Total_amount)public{
+    function RegEvent(string memory _Patient_name,uint _age,string memory _rel,string memory _prb,uint _deadline,string memory _Hospital_name,string memory _Docter,uint _Total_amount)public{
             require(Organizer_Info[msg.sender].active==true,"Only Organizer Can Activate Event");
+            require(Event_Info[msg.sender].active==false,"You can Create Event only one");
             Event memory xEvent=Event({
                 Patient_name:_Patient_name,
-                Dieases_name:_Dieases_name,
+                age:_age,
+                Relation:_rel,
+                Doctor:_Docter,
+                Prb:_prb,
+                deadline:_deadline,
                 Hospital_name:_Hospital_name,
-                Docter_name:_Docter_name,
-                Contact_Docter:_Contact_Docter,
                 Total_amount:_Total_amount,
-                Remaining_amount:_Total_amount
+                Remaining_amount:_Total_amount,
+                active:true
 
             });
             Event_Info[msg.sender]=xEvent;
-
+            Total_Events++;
+            Event_Info_Log.push(msg.sender);
     }
 
-    function Pay(address payable to,string memory _Name,uint _Amount,string memory _Phone_number,string memory _Emailid) public payable{
-            require(msg.value>=_Amount,"Insufficient Balance");
+
+    function Pay(address payable to,string memory _Name,string memory _Emailid) public payable{
+           
+            require(Event_Info[to].deadline>block.timestamp,"Time for the Camp is Over");
             require(Event_Info[to].Remaining_amount!=0,"Already Funded");
-            require(Event_Info[to].Remaining_amount>-_Amount,"Please Enter Correct Amount");
+            uint xprice=Event_Info[to].Remaining_amount;
+            xprice=xprice*1e18;
+            require(xprice>msg.value,"Please Enter Correct Amount");
             End_user memory xend_user=End_user({
                 Name:_Name,
-                Amount:_Amount,
+                Amount:msg.value,
                 user_address:msg.sender,
-                Phone_number:_Phone_number,
                 Email_id:_Emailid
             });
-
             End_user_Info[msg.sender]=xend_user;
-            payable(to).transfer(_Amount);
-            Event_Info[to].Remaining_amount-=_Amount;
-            
+             (bool callSuccess, ) = payable(to).call{value:msg.value}("");
+            require(callSuccess, "Call failed");
+            End_user_Log.push(msg.sender);
+            xprice=xprice-msg.value.getConversionRate();
+            Event_Info[to].Remaining_amount=xprice;
 
+            if(Event_Info[to].Remaining_amount==0){
+                Event_Info[to].active=false;
+            }
             
     }
+
+    function VOrganizer_Log() public view returns(address[] memory){
+        return Organizer_Log;
+    }
+    function VEnd_user_Log() public view returns(address[] memory){
+        return End_user_Log;
+    }
+    
     
 }

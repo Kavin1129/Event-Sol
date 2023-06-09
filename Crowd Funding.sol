@@ -18,6 +18,7 @@ contract chain {
         uint age;
         string Relation;
         string Prb;
+        string link;
         uint deadline;
         string Hospital_name;
         string Doctor;
@@ -55,19 +56,20 @@ contract chain {
             Total_Organizer++;
     }
 
-    function RegEvent(string memory _Patient_name,uint _age,string memory _rel,string memory _prb,uint _deadline,string memory _Hospital_name,string memory _Docter,uint _Total_amount)public{
+    function RegEvent(string memory _Patient_name,uint _age,string memory _rel,string memory _link,string memory _prb,uint _deadline,string memory _Hospital_name,string memory _Docter,uint _Total_amount)public{
             require(Organizer_Info[msg.sender].active==true,"Only Organizer Can Activate Event");
-            require(Event_Info[msg.sender].active==false,"You can Create Event only one");
+            require(Event_Info[msg.sender].active==false,"You can Create Event only once");
             Event memory xEvent=Event({
                 Patient_name:_Patient_name,
                 age:_age,
                 Relation:_rel,
                 Doctor:_Docter,
                 Prb:_prb,
+                link:_link,
                 deadline:_deadline,
                 Hospital_name:_Hospital_name,
                 Total_amount:_Total_amount,
-                Remaining_amount:_Total_amount,
+                Remaining_amount:_Total_amount*1e18,
                 active:true
 
             });
@@ -82,7 +84,7 @@ contract chain {
             require(Event_Info[to].deadline>block.timestamp,"Time for the Camp is Over");
             require(Event_Info[to].Remaining_amount!=0,"Already Funded");
             uint xprice=Event_Info[to].Remaining_amount;
-            xprice=xprice*1e18;
+            //xprice=xprice*1e18;
             require(xprice>msg.value,"Please Enter Correct Amount");
             End_user memory xend_user=End_user({
                 Name:_Name,
@@ -109,6 +111,4 @@ contract chain {
     function VEnd_user_Log() public view returns(address[] memory){
         return End_user_Log;
     }
-    
-    
 }
